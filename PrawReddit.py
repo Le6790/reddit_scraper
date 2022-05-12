@@ -56,15 +56,9 @@ class PrawReddit:
         else:
             submission = self.reddit_instance.submission(url)
 
-        #TODO: Delete
-        print(f"Working on {submission.title}")
-        print(f"url: {submission.permalink}")
-        print(f"author: {submission.author.name }")
-
-        print("------")
         post = {}
         post["title"] = submission.title
-        post["author"] = submission.author.name if submission.author.name else ""
+        post["author"] = submission.author.name
         post["score"] = submission.score
         post["selftext"] = submission.selftext
         post["url"] = submission.permalink
@@ -81,9 +75,6 @@ class PrawReddit:
             if comment.stickied:
                 continue
 
-            print(f"Comment: {comment.body}")
-            print(f"ID: {comment.id}")
-            print("*******")
             comment_dict["comment"] = comment.body
             comment_dict["author"] = comment.author.name if comment.body != "[removed]" else ""
             comment_dict["score"] = comment.score

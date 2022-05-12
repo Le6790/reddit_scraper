@@ -1,11 +1,13 @@
 import json
+from os import path,mkdir
 """This file turns a dictionary into json"""
+
 
 def dict_to_json(self, post: dict) -> json:
     """
-        Input: 
+        Input:
             post: dict
-        Return 
+        Return
             json object
 
         Convert dictionary to json string
@@ -13,27 +15,28 @@ def dict_to_json(self, post: dict) -> json:
     json_object = json.dumps(post, indent=4)
     return json_object
 
+
 def write_to_json_file(self, post: dict, directory_path: str = "") -> None:
     """
-        Input: 
+        Input:
             post: dictionary
             directory_path: str
-        Return 
+        Return
             json object
 
         Convert dictionary to json and writes it to a file
     """
 
-    #check for valid directory
+    # check for valid directory
     if directory_path:
         if not path.exists(directory_path):
             try:
                 mkdir(directory_path)
             except:
-                print(f"Something went wrong creating the directory{directory_path}")
+                print(
+                    f"Something went wrong creating the directory{directory_path}")
         if directory_path[-1] != '/':
             directory_path += '/'
-
 
     filename = directory_path + post["title"].replace(" ", "_")[0:45] + ".json"
     with open(filename, 'w') as outfile:

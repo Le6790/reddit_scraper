@@ -1,7 +1,7 @@
 import praw
 import json  # Might move this to it's own file..
 from praw.models import MoreComments
-
+from os import path,mkdir
 
 class PrawReddit:
     def __init__(self, config):
@@ -33,23 +33,13 @@ class PrawReddit:
         subreddit = self.reddit_instance.subreddit(subreddit_name)
 
         hot_submissions = subreddit.hot(limit=limit)
-
+        
+        hot_posts_list = []
         for submission in hot_submissions:
-            if not (submission.stickied):
-                print(submission.title, submission.upvote_ratio)
-                print(submission.id)
-                print(submission.url)
-                print('Comment Count', len(submission.comments))
-                submission.comments.replace_more(limit=None)
-                all_comments = []
-                comment_queue = submission.comments[:]
-                while comment_queue:
-                    comment = comment_queue.pop(0)
-                    comment_queue.extend(comment.replies)
-                    all_comments.append(comment)
-                print('All comment count: ', len(all_comments))
-                print("-----")
-        return hot_submissions
+            if not submission.stickied:
+                hot_posts_list.append(self.get_single_post(submission.id))
+
+        return hot_posts_list
 
     def get_single_post(self, url) -> dict:
         """
@@ -60,16 +50,24 @@ class PrawReddit:
 
             Given a url to a reddit post, returns specific post information and top level comments(sorted by score)
         """
-
+        if (".com" in url):
+            submission = self.reddit_instance.submission(url=url)
         # url can be submission id or actual reddit url
-        submission = self.reddit_instance.submission(url)
+        else:
+            submission = self.reddit_instance.submission(url)
 
+        #TODO: Delete
+        print(f"Working on {submission.title}")
+        print(f"url: {submission.permalink}")
+        print(f"author: {submission.author.name }")
+
+        print("------")
         post = {}
         post["title"] = submission.title
-        post["author"] = submission.author.name
+        post["author"] = submission.author.name if submission.author.name else ""
         post["score"] = submission.score
         post["selftext"] = submission.selftext
-        post["url"] = submission.url
+        post["url"] = submission.permalink
         post["comments"] = self.get_comments_from_submission(submission)
         return post
 
@@ -82,8 +80,12 @@ class PrawReddit:
                 continue
             if comment.stickied:
                 continue
+
+            print(f"Comment: {comment.body}")
+            print(f"ID: {comment.id}")
+            print("*******")
             comment_dict["comment"] = comment.body
-            comment_dict["author"] = comment.author.name
+            comment_dict["author"] = comment.author.name if comment.body != "[removed]" else ""
             comment_dict["score"] = comment.score
 
             comment_list.append(comment_dict)
@@ -94,30 +96,4 @@ class PrawReddit:
 
         return comment_list
 
-    def post_to_json(self, post: dict) -> json:
-        """
-            Input: 
-                post: dict
-            Return 
-                json object
 
-            Convert dictionary to json string
-        """
-        json_object = json.dumps(post, indent=4)
-        return json_object
-
-    def write_post_to_json_file(self, post: dict, directory_path: str = "") -> None:
-        """
-            Input: 
-                post: dictionary
-                directory_path: str
-            Return 
-                json object
-
-            Convert dictionary to json and writes it to a file
-        """
-        filename = directory_path + post["title"].replace(" ", "_") + ".json"
-        with open(filename, 'w') as outfile:
-            json.dump(post, outfile)
-
-        print(f"Dumped json into: {filename}")

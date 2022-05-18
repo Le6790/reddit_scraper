@@ -1,9 +1,24 @@
 import json
-from os import path,mkdir
+from os import makedirs, path,mkdir
 """This file turns a dictionary into json"""
 
+def create_directories(directory_path):
+    # check for valid directory
+    if directory_path:
+        if not path.exists(directory_path):
+            try:
+                makedirs(directory_path)
+            except Exception as e:
+                print(
+                    f"Something went wrong creating the directory{directory_path}")
+                print(f"Error: {e}")
+        if directory_path[-1] != '/':
+            directory_path += '/'
+    
+    return directory_path
 
-def dict_to_json(self, post: dict) -> json:
+
+def dict_to_json(post: dict) -> json:
     """
         Input:
             post: dict
@@ -16,7 +31,7 @@ def dict_to_json(self, post: dict) -> json:
     return json_object
 
 
-def write_to_json_file(self, post: dict, directory_path: str = "") -> None:
+def write_to_json_file(post: dict, directory_path: str = "") -> None:
     """
         Input:
             post: dictionary
@@ -26,20 +41,23 @@ def write_to_json_file(self, post: dict, directory_path: str = "") -> None:
 
         Convert dictionary to json and writes it to a file
     """
+    #add directory path to dictionary for future use
+    post = add_filepath_to_json(post,directory_path)
 
-    # check for valid directory
-    if directory_path:
-        if not path.exists(directory_path):
-            try:
-                mkdir(directory_path)
-            except:
-                print(
-                    f"Something went wrong creating the directory{directory_path}")
-        if directory_path[-1] != '/':
-            directory_path += '/'
+    # check for valid directory and create if needed
+    post_directory_path = create_directories(directory_path)
 
-    filename = directory_path + post["title"].replace(" ", "_")[0:45] + ".json"
+    filename = post_directory_path  + post["post_name"].replace(" ", "_") + ".json"
     with open(filename, 'w') as outfile:
         json.dump(post, outfile)
 
     print(f"Dumped json into: {filename}")
+
+
+def add_filepath_to_json(json_file, directory_path) -> json:
+    new_json_file = json_file
+    new_json_file["filepath"]= f'{directory_path}'
+
+
+    return new_json_file
+

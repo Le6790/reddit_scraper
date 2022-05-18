@@ -57,18 +57,25 @@ class PrawReddit:
             submission = self.reddit_instance.submission(url)
 
         post = {}
-        post["title"] = submission.title
         post["author"] = submission.author.name
+        post["post_name"] = submission.permalink.split("/")[-2] + "_" + str(submission.score)
         post["score"] = submission.score
         post["selftext"] = submission.selftext
+        post["title"] = submission.title
         post["url"] = submission.permalink
+        post["subreddit"] = submission.subreddit.display_name
         post["comments"] = self.get_comments_from_submission(submission)
+        
         return post
 
     def get_comments_from_submission(self, submission: praw) -> list:
         """returns a list of (toplevel)comment dicts"""
         comment_list = []
         for comment in submission.comments:
+            if type(comment) == MoreComments or type(comment) == None:
+                continue
+            if comment.body == None or comment.author == None:
+                continue
             comment_dict = {}
             if isinstance(comment, MoreComments):
                 continue
@@ -78,7 +85,7 @@ class PrawReddit:
             comment_dict["comment"] = comment.body
             comment_dict["author"] = comment.author.name if comment.body != "[removed]" else ""
             comment_dict["score"] = comment.score
-
+            comment_dict["id"]= comment.id
             comment_list.append(comment_dict)
 
         # sort comments by score(upvotes)

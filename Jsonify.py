@@ -18,6 +18,12 @@ def create_directories(directory_path):
     return directory_path
 
 
+def json_to_dict(file_name):
+    with open(file_name,'r') as fin:
+        my_dict = json.load(fin)
+
+    return my_dict
+
 def dict_to_json(post: dict) -> json:
     """
         Input:

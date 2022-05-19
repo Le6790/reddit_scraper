@@ -1,8 +1,8 @@
-import praw
+import argparse
 import config
 import PrawReddit
 import Jsonify
-import argparse
+import Text_To_Speech
 
 
 def main(args):
@@ -13,7 +13,6 @@ def main(args):
     post_dict = {}
     if args.url:
         post_dict = reddit_read_only.get_single_post(args.url)
-        print(post_dict)
 
         if args.save_folder:
             save_folder =  f'{args.save_folder}/{post_dict["subreddit"]}/{post_dict["post_name"]}/'
@@ -21,8 +20,16 @@ def main(args):
             save_folder = f'{save_folder}/{post_dict["subreddit"]}/{post_dict["post_name"]}/'
 
         Jsonify.write_to_json_file(post_dict,save_folder)
+    
+    # Create TTS mp3s
 
+    tts = Text_To_Speech.Text_To_Speech(post_dict,comment_limit=5)
 
+    tts.create_mp3s()
+
+    
+    #Create videos
+    
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@ import config
 import PrawReddit
 import Jsonify
 import Text_To_Speech
-
+import create_video
 
 def main(args):
 
@@ -21,6 +21,15 @@ def main(args):
 
         Jsonify.write_to_json_file(post_dict,save_folder)
     
+
+
+    input("Pausing to allow you to review the json. Press enter to continue.")
+
+    updated_json = Jsonify.json_to_dict(save_folder + post_dict["post_name"].replace(" ", "_") + ".json")
+    if post_dict != updated_json:
+        print("Updating post dict json file!")
+        post_dict = updated_json
+    
     # Create TTS mp3s
 
     tts = Text_To_Speech.Text_To_Speech(post_dict,comment_limit=5)
@@ -29,7 +38,18 @@ def main(args):
 
     
     #Create videos
+
+    if (input("Do you want to create a video from the given reddit submission? (y/n)") == "y"):
+        video = create_video.Create_Video(post_dict)
+        title_clip = video.create_title_clip()
+        #video.save_frame_of_clip(title_clip,"video_tests/title_clip.png")
+        #video.save_video_clips(title_clip,"video_tests/title_clip.mp4")
+
+        comment_clips = video.create_comment_clips()
+        #video.save_frame_of_clip(comment_clips, "video_tests/comment_clips_frame.png")
+        video.save_video_clips(comment_clips, f'{save_folder}{post_dict["post_name"]}.mp4', 'background_videos/coffee_splash.mp4')
     
+
 
 
 if __name__ == '__main__':

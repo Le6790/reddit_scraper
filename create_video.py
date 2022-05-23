@@ -1,28 +1,26 @@
 import moviepy.editor as mpye
 from numpy import mintypecode
 import Jsonify
-
-
+import os 
+import pydub
 vcodec = "libx264"
 
 videoquality = "24"
 
 compress = "slow"
 
-
-post_dict = Jsonify.json_to_dict(
-    "./reddit_posts/AskReddit/what_rules_were_put_in_place_because_of_you_39786/what_rules_were_put_in_place_because_of_you_39786.json")
-
-
 class Create_Video:
 
     def __init__(self, post_dict):
         self.post_dict = post_dict
+        self.title_mp3 = self.get_files("title.mp3")
+        self.comments_mp3 = self.get_files("comments.mp3")
+        self.duration = self.get_duration()
 
     def create_title_clip(self):
 
         title_text = self.post_dict["title"]
-        title_mp3_file = self.get_files("title.mp3")
+        title_mp3_file = self.title_mp3
         score = self.post_dict["score"]
         
         #set the final clip audio and the clip duration to the audio's duration
@@ -49,15 +47,13 @@ class Create_Video:
 
         # Create the clip background
         # colored background
-        clip_color_background = mpye.ColorClip(size=(clip_width+100,
+        clip_color_background = mpye.ColorClip(size=(clip_width+150,
                                                    clip_height+50),
                                              color=(109, 109, 109))
         clip_color_background = clip_color_background.set_opacity(0.6)
     
         #compose the final clip + background
         final_clip = mpye.CompositeVideoClip([clip_color_background, score_clip, clip])
-
-        
 
         final_clip = final_clip.set_duration(audio_clip.duration)
 
@@ -192,7 +188,7 @@ class Create_Video:
         comments = self.post_dict["comments"]
 
         comment_clips = []
-        for comment in comments[:4]: #TODO: loop over comments a different way
+        for comment in comments[:5]:
             actual_comment = comment["comment"]
             author = comment["author"]
             score = comment["score"]
@@ -217,10 +213,15 @@ class Create_Video:
         clip.save_frame(name)
         print(f"Saved clip - {name}.")
 
-    def save_video_clips(self, clips:mpye.CompositeVideoClip, name):
+    def save_video_clips(self, clips:mpye.CompositeVideoClip, name,background_clip):
         #add background
-        background_clip = mpye.VideoFileClip("background_videos/boat_on_sea_2mins.mp4")
-        background_clip = background_clip.set_duration(clips.duration)
+        background_clip = mpye.VideoFileClip(background_clip)
+        background_clip = background_clip.without_audio()
+        if (clips.duration > background_clip.duration):
+            background_clip = background_clip.loop(duration=clips.duration)
+        else:
+            background_clip = background_clip.set_duration(clips.duration)
+        background_clip = background_clip.resize((1080,1920))
 
         final_clip = mpye.CompositeVideoClip([background_clip,clips.set_position("center")])
         final_clip.write_videofile(name)
@@ -229,4 +230,25 @@ class Create_Video:
     def get_files(self, file):
         filepath = self.post_dict["filepath"]
 
+        comment_files = []
+        if(file == "comments.mp3"):
+            for (dirpath, dirnames,filenames) in os.walk(filepath):
+                comment_files.extend([f"{filepath}{filename}" for filename in filenames if "comment" in filename])
+            return comment_files
+
         return filepath + file
+
+    def get_duration(self):
+        
+        full_duration = 0
+
+        #title duration
+        full_duration += mpye.AudioFileClip(self.title_mp3).duration
+
+        #comments duration
+        for comment in self.comments_mp3:
+            full_duration += mpye.AudioFileClip(comment).duration
+
+        return full_duration
+
+

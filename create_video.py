@@ -2,7 +2,6 @@ import moviepy.editor as mpye
 from numpy import mintypecode
 import Jsonify
 import os 
-import pydub
 vcodec = "libx264"
 
 videoquality = "24"
@@ -11,10 +10,11 @@ compress = "slow"
 
 class Create_Video:
 
-    def __init__(self, post_dict):
+    def __init__(self, post_dict, comment_limit):
         self.post_dict = post_dict
         self.title_mp3 = self.get_files("title.mp3")
         self.comments_mp3 = self.get_files("comments.mp3")
+        self.comment_limit = comment_limit
         self.duration = self.get_duration()
 
     def create_title_clip(self):
@@ -188,7 +188,7 @@ class Create_Video:
         comments = self.post_dict["comments"]
 
         comment_clips = []
-        for comment in comments[:5]:
+        for comment in comments[:self.comment_limit]:
             actual_comment = comment["comment"]
             author = comment["author"]
             score = comment["score"]
